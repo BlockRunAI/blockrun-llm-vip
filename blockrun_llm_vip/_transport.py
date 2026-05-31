@@ -73,7 +73,11 @@ class BlockRunX402Transport(httpx.BaseTransport):
         header = _payment_header_from_402(self._account, self._api_url, response)
         if not header:
             return response
+        # PAYMENT-SIGNATURE is what BlockRun's chat gateway expects; X-Payment is the
+        # generic x402 header name the video/realface endpoints document. Send both so
+        # one transport serves every endpoint.
         request.headers["PAYMENT-SIGNATURE"] = header
+        request.headers["X-Payment"] = header
         return self._base.handle_request(request)
 
     def close(self) -> None:
@@ -96,7 +100,10 @@ class AsyncBlockRunX402Transport(httpx.AsyncBaseTransport):
         header = _payment_header_from_402(self._account, self._api_url, response)
         if not header:
             return response
+        # See the sync transport: send both the BlockRun (PAYMENT-SIGNATURE) and generic
+        # x402 (X-Payment) header names so one transport serves every endpoint.
         request.headers["PAYMENT-SIGNATURE"] = header
+        request.headers["X-Payment"] = header
         return await self._base.handle_async_request(request)
 
     async def aclose(self) -> None:
