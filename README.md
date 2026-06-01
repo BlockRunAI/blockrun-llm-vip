@@ -100,7 +100,20 @@ print(job["data"][0]["url"], job["payment"]["tx_hash"])
 `real_face_asset_id` is mutually exclusive with `image_url` and only works on Seedance
 2.0 / 2.0-fast. Other `generate()` options: `resolution`, `generate_audio`, `seed`,
 `watermark`, `return_last_frame`, plus `timeout` / `poll_interval` for the poll loop.
-Async: `AsyncVideo`, `AsyncRealFace`.
+
+**AI character** (mascot / avatar, no liveness) — enroll a **Virtual Portrait** instead
+of a RealFace; same `ta_xxxx` → `real_face_asset_id` flow:
+
+```python
+from blockrun_llm_vip import VirtualPortrait
+
+vp = VirtualPortrait()
+asset = vp.enroll(name="Mascot", image_url="https://example.com/character.jpg")  # $0.01
+# pass asset["asset_id"] as real_face_asset_id on Seedance 2.0 / 2.0-fast
+```
+
+List what a wallet has enrolled: `RealFace().list()` / `VirtualPortrait().list()` (free).
+Async: `AsyncVideo`, `AsyncRealFace`, `AsyncVirtualPortrait`.
 
 ## Wallet
 

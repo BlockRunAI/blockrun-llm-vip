@@ -61,6 +61,10 @@ def _enroll_url(api_url: str) -> str:
     return f"{api_url}/v1/realface/enroll"
 
 
+def _list_url(api_url: str, address: str) -> str:
+    return f"{api_url}/v1/wallet/{address}/realfaces"
+
+
 def _ok(response: httpx.Response, context: str) -> Dict[str, Any]:
     if response.status_code // 100 != 2:
         raise RealFaceError(
@@ -130,6 +134,12 @@ class RealFace:
         body = {"name": name, "image_url": image_url, "group_id": group_id}
         return _ok(self._client.post(_enroll_url(self._api_url), json=body), "enroll")
 
+    def list(self) -> Dict[str, Any]:
+        """FREE: list the RealFace (real-person) assets this wallet has enrolled."""
+        return _ok(
+            self._client.get(_list_url(self._api_url, self._account.address)), "list"
+        )
+
     def close(self) -> None:
         self._client.close()
 
@@ -192,6 +202,13 @@ class AsyncRealFace:
         body = {"name": name, "image_url": image_url, "group_id": group_id}
         return _ok(
             await self._client.post(_enroll_url(self._api_url), json=body), "enroll"
+        )
+
+    async def list(self) -> Dict[str, Any]:
+        """FREE: list the RealFace (real-person) assets this wallet has enrolled."""
+        return _ok(
+            await self._client.get(_list_url(self._api_url, self._account.address)),
+            "list",
         )
 
     async def aclose(self) -> None:

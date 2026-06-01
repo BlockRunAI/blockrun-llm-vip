@@ -35,6 +35,7 @@ from ._realface import (
     RealFaceError,
     RealFaceTimeout,
 )
+from ._portrait import AsyncVirtualPortrait, VirtualPortrait
 from ._video_client import (
     AsyncVideo,
     Video,
@@ -42,7 +43,7 @@ from ._video_client import (
     VideoGenerationTimeout,
 )
 
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 __all__ = [
     "Anthropic",
     "AsyncAnthropic",
@@ -56,4 +57,6 @@ __all__ = [
     "AsyncRealFace",
     "RealFaceError",
     "RealFaceTimeout",
+    "VirtualPortrait",
+    "AsyncVirtualPortrait",
 ]

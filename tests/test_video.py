@@ -12,6 +12,9 @@ from blockrun_llm_vip._video_client import (
     resolve_poll_url,
 )
 from blockrun_llm_vip._realface import _is_active
+from blockrun_llm_vip._realface import _list_url as _rf_list_url
+from blockrun_llm_vip._portrait import _enroll_url as _vp_enroll_url
+from blockrun_llm_vip._portrait import _list_url as _vp_list_url
 
 
 # ---- build_video_body -------------------------------------------------------
@@ -121,3 +124,25 @@ def test_realface_is_active():
     assert _is_active({"status": "active", "ready_to_finalize": True}) is True
     assert _is_active({"ready_to_finalize": True}) is True
     assert _is_active({"status": "pending_validation", "ready_to_finalize": False}) is False
+
+
+def test_realface_list_url():
+    assert (
+        _rf_list_url("https://blockrun.ai/api", "0xABC")
+        == "https://blockrun.ai/api/v1/wallet/0xABC/realfaces"
+    )
+
+
+# ---- virtual portrait -------------------------------------------------------
+
+def test_portrait_enroll_url():
+    assert _vp_enroll_url("https://blockrun.ai/api") == (
+        "https://blockrun.ai/api/v1/portrait/enroll"
+    )
+
+
+def test_portrait_list_url():
+    assert (
+        _vp_list_url("https://blockrun.ai/api", "0xABC")
+        == "https://blockrun.ai/api/v1/wallet/0xABC/portraits"
+    )
