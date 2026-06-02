@@ -38,8 +38,7 @@ from urllib.parse import urlparse
 
 import httpx
 
-from ._common import resolve_account_and_url
-from ._transport import AsyncBlockRunX402Transport, BlockRunX402Transport
+from ._common import resolve_chain
 
 # Seedance is the only family that accepts a real_face_asset_id (RealFace / Virtual
 # Portrait) — and only the 2.0 generation does. Keep this in sync with the gateway docs.
@@ -168,11 +167,15 @@ class Video:
         *,
         private_key: Optional[str] = None,
         api_url: Optional[str] = None,
+        chain: str = "base",
+        rpc_url: Optional[str] = None,
         request_timeout: float = 120.0,
     ):
-        self._account, self._api_url = resolve_account_and_url(private_key, api_url)
+        ctx = resolve_chain(chain, private_key, api_url, rpc_url=rpc_url)
+        self._api_url = ctx.api_url
+        self._address = ctx.address
         self._client = httpx.Client(
-            transport=BlockRunX402Transport(self._account, self._api_url),
+            transport=ctx.make_transport(async_=False),
             timeout=request_timeout,
         )
 
@@ -228,11 +231,15 @@ class AsyncVideo:
         *,
         private_key: Optional[str] = None,
         api_url: Optional[str] = None,
+        chain: str = "base",
+        rpc_url: Optional[str] = None,
         request_timeout: float = 120.0,
     ):
-        self._account, self._api_url = resolve_account_and_url(private_key, api_url)
+        ctx = resolve_chain(chain, private_key, api_url, rpc_url=rpc_url)
+        self._api_url = ctx.api_url
+        self._address = ctx.address
         self._client = httpx.AsyncClient(
-            transport=AsyncBlockRunX402Transport(self._account, self._api_url),
+            transport=ctx.make_transport(async_=True),
             timeout=request_timeout,
         )
 

@@ -37,8 +37,7 @@ from typing import Any, Dict, Optional
 
 import httpx
 
-from ._common import resolve_account_and_url
-from ._transport import AsyncBlockRunX402Transport, BlockRunX402Transport
+from ._common import resolve_chain
 
 
 class RealFaceError(RuntimeError):
@@ -87,11 +86,15 @@ class RealFace:
         *,
         private_key: Optional[str] = None,
         api_url: Optional[str] = None,
+        chain: str = "base",
+        rpc_url: Optional[str] = None,
         request_timeout: float = 60.0,
     ):
-        self._account, self._api_url = resolve_account_and_url(private_key, api_url)
+        ctx = resolve_chain(chain, private_key, api_url, rpc_url=rpc_url)
+        self._api_url = ctx.api_url
+        self._address = ctx.address
         self._client = httpx.Client(
-            transport=BlockRunX402Transport(self._account, self._api_url),
+            transport=ctx.make_transport(async_=False),
             timeout=request_timeout,
         )
 
@@ -137,7 +140,7 @@ class RealFace:
     def list(self) -> Dict[str, Any]:
         """FREE: list the RealFace (real-person) assets this wallet has enrolled."""
         return _ok(
-            self._client.get(_list_url(self._api_url, self._account.address)), "list"
+            self._client.get(_list_url(self._api_url, self._address)), "list"
         )
 
     def close(self) -> None:
@@ -158,11 +161,15 @@ class AsyncRealFace:
         *,
         private_key: Optional[str] = None,
         api_url: Optional[str] = None,
+        chain: str = "base",
+        rpc_url: Optional[str] = None,
         request_timeout: float = 60.0,
     ):
-        self._account, self._api_url = resolve_account_and_url(private_key, api_url)
+        ctx = resolve_chain(chain, private_key, api_url, rpc_url=rpc_url)
+        self._api_url = ctx.api_url
+        self._address = ctx.address
         self._client = httpx.AsyncClient(
-            transport=AsyncBlockRunX402Transport(self._account, self._api_url),
+            transport=ctx.make_transport(async_=True),
             timeout=request_timeout,
         )
 
@@ -207,7 +214,7 @@ class AsyncRealFace:
     async def list(self) -> Dict[str, Any]:
         """FREE: list the RealFace (real-person) assets this wallet has enrolled."""
         return _ok(
-            await self._client.get(_list_url(self._api_url, self._account.address)),
+            await self._client.get(_list_url(self._api_url, self._address)),
             "list",
         )
 

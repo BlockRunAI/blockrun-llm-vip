@@ -23,8 +23,17 @@ Video (Seedance, incl. real-person / RealFace):
 
 Async variants: AsyncAnthropic, AsyncOpenAI, AsyncVideo, AsyncRealFace.
 
+Solana: pass `chain="solana"` to any client to pay USDC on Solana via
+sol.blockrun.ai instead of Base (needs the `[solana]` extra):
+
+    pip install blockrun-llm-vip[solana]
+
+    from blockrun_llm_vip import Anthropic, OpenAI
+    claude = Anthropic(chain="solana")   # bs58 key from ~/.blockrun/.solana-session
+    gpt = OpenAI(chain="solana")
+
 Access: give BlockRun your wallet address to enable VIP, then pay per call from that
-wallet (key stays local — used only for EIP-712 signing).
+wallet (key stays local — used only for EIP-712 / Solana SVM signing).
 """
 
 from ._anthropic_client import Anthropic, AsyncAnthropic
@@ -43,7 +52,7 @@ from ._video_client import (
     VideoGenerationTimeout,
 )
 
-__version__ = "0.2.1"
+__version__ = "0.3.0"
 __all__ = [
     "Anthropic",
     "AsyncAnthropic",

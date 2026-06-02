@@ -31,8 +31,7 @@ except ImportError as e:  # pragma: no cover
         "The 'openai' package is required. Install: pip install blockrun-llm-vip"
     ) from e
 
-from ._common import resolve_account_and_url
-from ._transport import BlockRunX402Transport, AsyncBlockRunX402Transport
+from ._common import resolve_chain
 
 
 def _openai_base_url(api_root: str) -> str:
@@ -42,22 +41,27 @@ def _openai_base_url(api_root: str) -> str:
 
 
 class OpenAI(openai.OpenAI):
-    """Drop-in for openai.OpenAI, paid via x402, native passthrough."""
+    """Drop-in for openai.OpenAI, paid via x402, native passthrough.
+
+    ``chain="solana"`` pays USDC on Solana via sol.blockrun.ai instead of Base.
+    """
 
     def __init__(
         self,
         *,
         private_key: Optional[str] = None,
         api_url: Optional[str] = None,
+        chain: str = "base",
+        rpc_url: Optional[str] = None,
         timeout: float = 120.0,
         **kwargs,
     ):
-        account, url = resolve_account_and_url(private_key, api_url)
+        ctx = resolve_chain(chain, private_key, api_url, rpc_url=rpc_url)
         http_client = httpx.Client(
-            transport=BlockRunX402Transport(account, url), timeout=timeout
+            transport=ctx.make_transport(async_=False), timeout=timeout
         )
         super().__init__(
-            base_url=_openai_base_url(url),
+            base_url=_openai_base_url(ctx.api_url),
             api_key=kwargs.pop("api_key", "blockrun"),
             http_client=http_client,
             **kwargs,
@@ -72,15 +76,17 @@ class AsyncOpenAI(openai.AsyncOpenAI):
         *,
         private_key: Optional[str] = None,
         api_url: Optional[str] = None,
+        chain: str = "base",
+        rpc_url: Optional[str] = None,
         timeout: float = 120.0,
         **kwargs,
     ):
-        account, url = resolve_account_and_url(private_key, api_url)
+        ctx = resolve_chain(chain, private_key, api_url, rpc_url=rpc_url)
         http_client = httpx.AsyncClient(
-            transport=AsyncBlockRunX402Transport(account, url), timeout=timeout
+            transport=ctx.make_transport(async_=True), timeout=timeout
         )
         super().__init__(
-            base_url=_openai_base_url(url),
+            base_url=_openai_base_url(ctx.api_url),
             api_key=kwargs.pop("api_key", "blockrun"),
             http_client=http_client,
             **kwargs,

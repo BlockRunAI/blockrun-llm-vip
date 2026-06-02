@@ -1,8 +1,8 @@
 # blockrun-llm-vip
 
 Genuine **native passthrough** for **Anthropic** and **OpenAI** through the BlockRun
-gateway — pay per call in USDC (x402) on Base, with **zero model substitution and zero
-response reshaping**.
+gateway — pay per call in USDC (x402) on **Base or Solana**, with **zero model
+substitution and zero response reshaping**.
 
 Unlike a normal aggregator, these clients **subclass the official `anthropic` and
 `openai` Python SDKs** and only swap the transport (to add x402 payment) and the base
@@ -51,6 +51,31 @@ print(r.system_fingerprint, r.model)        # genuine OpenAI direct
 ```
 
 Async: `from blockrun_llm_vip import AsyncAnthropic, AsyncOpenAI`.
+
+## Solana — pay in USDC on Solana
+
+Pass `chain="solana"` to **any** client to pay USDC on Solana (routed through
+`sol.blockrun.ai`) instead of Base. The response is identical native passthrough —
+only the payment leg changes (x402 SVM signing instead of EIP-712). Needs the
+`[solana]` extra:
+
+```bash
+pip install blockrun-llm-vip[solana]
+```
+
+```python
+from blockrun_llm_vip import Anthropic, OpenAI, Video
+
+claude = Anthropic(chain="solana")   # bs58 key auto-loaded from ~/.blockrun/.solana-session
+gpt    = OpenAI(chain="solana")
+video  = Video(chain="solana")
+# default stays Base:
+claude_base = Anthropic()
+```
+
+Works on all clients (`Anthropic`, `OpenAI`, `Video`, `RealFace`, `VirtualPortrait`
++ async). Signing needs a Solana RPC for the blockhash — it defaults to BlockRun's
+free proxy and is overridable via `rpc_url=` or the `SOLANA_RPC_URL` env var.
 
 ## Video — Seedance, incl. real-person (RealFace)
 
@@ -126,9 +151,13 @@ Async: `AsyncVideo`, `AsyncRealFace`, `AsyncVirtualPortrait`.
 
 ## Wallet
 
-The private key is used **only for local EIP-712 signing** and never leaves your machine.
-Resolution: `private_key=` arg → `BLOCKRUN_WALLET_KEY` env → `BASE_CHAIN_WALLET_KEY` env →
-`~/.blockrun/.session`.
+The private key is used **only for local signing** (EIP-712 on Base, SVM on Solana) and
+never leaves your machine.
+
+- **Base:** `private_key=` arg → `BLOCKRUN_WALLET_KEY` env → `BASE_CHAIN_WALLET_KEY` env →
+  `~/.blockrun/.session`.
+- **Solana** (`chain="solana"`): `private_key=` arg (bs58) → `SOLANA_WALLET_KEY` env →
+  `~/.*/solana-wallet.json` → `~/.blockrun/.solana-session`.
 
 ## Access
 
