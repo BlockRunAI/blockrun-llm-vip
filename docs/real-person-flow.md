@@ -137,6 +137,73 @@ their phone and tapping through the H5.
 
 ---
 
+## On-phone verification — what the rights-holder does
+
+This is step 2 above, expanded — the part that happens on the **real person's own phone**.
+It takes ~1 minute and requires **no login, no password, no email, no ID upload, and no
+personal-info entry**. Hand this section to the person being enrolled.
+
+### Getting the link onto their phone
+
+`rf.init(name)` returns an `h5_link` (a `kyc.byteintl.com` URL — that's BlockRun's
+identity-verification partner). Get it onto the rights-holder's phone either way:
+
+- **QR code (easiest):** render the `h5_link` as a QR. They scan it with their phone's
+  camera — iOS and Android both auto-detect QR codes — and tap the banner that pops up.
+  The no-code [RealFace Studio](https://blockrun.ai/studio/realface) generates this QR for you.
+- **Send the link:** message/AirDrop/email the `h5_link` and they tap it open on mobile.
+
+### What they see, step by step
+
+| # | On their phone |
+|---|---|
+| 1 | They open the link → an H5 page loads in the phone browser. URL is `kyc.byteintl.com` |
+| 2 | Browser asks **"Allow camera access?"** → they tap **Allow** |
+| 3 | A circle with a live camera feed appears → they position their face inside it |
+| 4 | The page prompts **"please nod"**, then **"please blink"** → each action ~1–2s. Total recording is **2–4 seconds** |
+| 5 | Page shows **"Verification completed. You can close this page now."** → they close the tab |
+
+Total time **~60 seconds**, including the QR scan and the camera-permission prompt.
+
+### If the camera is blocked or unavailable
+
+If they tap **Deny** on the camera prompt, the H5 offers a fallback:
+
+1. It shows "Use the alternate authentication method"
+2. They record a **2–4 second** clip with the phone's native camera app — same **nod + blink**
+3. They upload that video file
+
+Same end result, ~30s slower.
+
+### No phone? Use a laptop
+
+The `h5_link` works in any modern browser with a webcam. They can open it on a laptop,
+grant the webcam permission, and do the same nod + blink.
+
+### The 120-second window
+
+The H5 session token expires **120 seconds** after `init`. If they don't finish in time
+they'll see **"Session expired"** — refresh it and have them re-scan:
+
+```python
+rf.init("Spokesperson — Q3 campaign", group_id=started["group_id"])  # fresh h5_link, same group
+```
+
+(In RealFace Studio, click **"Generate fresh QR"**.) Other on-phone failures: **"Verification
+failed"** (poor lighting / face out of frame / action not completed) — the H5 usually
+offers an in-session retry.
+
+### Privacy — what leaves their phone
+
+- The live face video goes **directly from their phone to the upstream identity service**
+  (`kyc.byteintl.com`). **BlockRun servers never receive the face video or any biometric
+  data** during this step.
+- The upstream service only keeps enough to perform a **one-time face-match** against the
+  photo you supply in `enroll()`. After the match is decided, **your supplied photo is the
+  asset of record** — the live video isn't referenced again in later Seedance generations.
+
+---
+
 ## Error / state reference
 
 The single x402 transport handles the money: the free `init` / `status` / `list` calls
