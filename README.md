@@ -71,9 +71,18 @@ job = video.generate(
 print(job["data"][0]["url"])          # permanent MP4 URL
 ```
 
-**Real person** — enroll a face once via **RealFace** (one-time $0.01, ~1-min on-phone
-liveness, no KYC), then pass its `ta_xxxx` as `real_face_asset_id` on Seedance 2.0 /
-2.0-fast to keep the same person across clips:
+**Real people are supported.** A specific, real human can appear consistently across
+clips — you don't upload a face per call (raw face uploads to Sora / generic
+image-to-video are blocked by design). Instead you **enroll the person once** via
+**RealFace** (one-time $0.01, ~1-min on-phone liveness for consent, **no KYC**), get a
+`ta_xxxx`, and pass it as `real_face_asset_id` on Seedance 2.0 / 2.0-fast:
+
+| Subject | Use | Liveness | KYC | Enroll |
+|---|---|---|---|---|
+| A real, specific person | `RealFace` | ~1 min on phone (consent) | No | `init → liveness → enroll` |
+| AI character / mascot | `VirtualPortrait` | None | No | single `enroll` call |
+
+Full flow, state machine, and error states: **[docs/real-person-flow.md](docs/real-person-flow.md)**.
 
 ```python
 from blockrun_llm_vip import Video, RealFace
