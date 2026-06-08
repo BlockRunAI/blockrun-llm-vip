@@ -68,6 +68,48 @@ def test_body_realface_requires_seedance_2():
     build_video_body("x", "bytedance/seedance-2.0-fast", real_face_asset_id="ta_abc")
 
 
+def test_body_last_frame_requires_image_url():
+    with pytest.raises(ValueError, match="requires image_url"):
+        build_video_body(
+            "x", "bytedance/seedance-2.0", last_frame_url="https://e/last.jpg"
+        )
+    body = build_video_body(
+        "x",
+        "bytedance/seedance-2.0",
+        image_url="https://e/first.jpg",
+        last_frame_url="https://e/last.jpg",
+    )
+    assert body["image_url"] == "https://e/first.jpg"
+    assert body["last_frame_url"] == "https://e/last.jpg"
+
+
+def test_body_reference_images_count_and_model():
+    # only on Seedance 2.0 generation
+    with pytest.raises(ValueError, match="omni"):
+        build_video_body(
+            "x", "bytedance/seedance-1.5-pro", reference_image_urls=["https://e/a.jpg"]
+        )
+    # 1..9 enforced
+    with pytest.raises(ValueError, match="between 1 and 9"):
+        build_video_body(
+            "x", "bytedance/seedance-2.0", reference_image_urls=[f"u{i}" for i in range(10)]
+        )
+    body = build_video_body(
+        "x", "bytedance/seedance-2.0", reference_image_urls=["https://e/a.jpg"]
+    )
+    assert body["reference_image_urls"] == ["https://e/a.jpg"]
+
+
+def test_body_reference_images_exclusive_with_image_url():
+    with pytest.raises(ValueError, match="mutually exclusive"):
+        build_video_body(
+            "x",
+            "bytedance/seedance-2.0",
+            image_url="https://e/x.jpg",
+            reference_image_urls=["https://e/a.jpg"],
+        )
+
+
 # ---- resolve_poll_url -------------------------------------------------------
 
 def test_poll_url_root_relative_joins_origin_not_api_root():

@@ -10,12 +10,16 @@ the official SDK parses the gateway's VERBATIM Anthropic response: real thinking
 
     client = Anthropic()  # wallet auto-loaded from ~/.blockrun/.session
     r = client.messages.create(
-        model="claude-sonnet-4.6",
+        model="claude-opus-4.8",   # or claude-sonnet-4.6 / claude-haiku-4.5 — never substituted
         max_tokens=2048,
-        thinking={"type": "enabled", "budget_tokens": 1024},
+        thinking={"type": "enabled", "budget_tokens": 1024},  # adaptive on Opus 4.7/4.8
         messages=[{"role": "user", "content": "hi"}],
     )
     print(r.content)               # includes a thinking block with a real .signature
+
+Current Claude ids: claude-opus-4.8 / 4.7 / 4.6 / 4.5, claude-sonnet-4.6 / 4.5,
+claude-haiku-4.5. The id you pass is forwarded verbatim — the gateway never upgrades or
+downgrades it (live catalog: https://blockrun.ai/api/v1/models).
 """
 
 from __future__ import annotations

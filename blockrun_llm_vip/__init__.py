@@ -21,7 +21,19 @@ Video (Seedance, incl. real-person / RealFace):
         real_face_asset_id="ta_...",   # from RealFace enrollment
     )
 
-Async variants: AsyncAnthropic, AsyncOpenAI, AsyncVideo, AsyncRealFace.
+More AI generation, same idiom (thin client, verbatim gateway JSON, x402-paid):
+
+    from blockrun_llm_vip import Image, Search, Exa, Audio, Voice, Phone
+
+    Image().generate("a red fox in snow", model="openai/gpt-image-1")
+    Search().search("latest on x402", sources=["x", "news"])   # Grok live search
+    Exa().search("neural search", category="research paper")    # Exa web search
+    Audio().speech("hello there", voice="sarah")                # TTS / music / SFX
+    Voice().call(to="+1...", task="confirm hours, then end")    # AI phone call
+    Phone().buy_number(area_code="415")                         # lease caller-ID number
+
+Async variants: AsyncAnthropic, AsyncOpenAI, AsyncVideo, AsyncRealFace, AsyncImage,
+AsyncSearch, AsyncExa, AsyncAudio, AsyncVoice, AsyncPhone.
 
 Solana: pass `chain="solana"` to any client to pay USDC on Solana via
 sol.blockrun.ai instead of Base (needs the `[solana]` extra):
@@ -51,13 +63,27 @@ from ._video_client import (
     VideoGenerationError,
     VideoGenerationTimeout,
 )
+from ._image_client import (
+    AsyncImage,
+    Image,
+    ImageGenerationError,
+    ImageGenerationTimeout,
+    encode_data_uri,
+)
+from ._search_client import AsyncSearch, Search, SearchError
+from ._exa_client import AsyncExa, Exa, ExaError
+from ._audio_client import AsyncAudio, Audio, AudioGenerationError
+from ._voice_client import AsyncVoice, Voice, VoiceCallTimeout, VoiceError
+from ._phone_client import AsyncPhone, Phone, PhoneError
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 __all__ = [
+    # LLM passthrough
     "Anthropic",
     "AsyncAnthropic",
     "OpenAI",
     "AsyncOpenAI",
+    # Video + real-person
     "Video",
     "AsyncVideo",
     "VideoGenerationError",
@@ -68,4 +94,29 @@ __all__ = [
     "RealFaceTimeout",
     "VirtualPortrait",
     "AsyncVirtualPortrait",
+    # Image
+    "Image",
+    "AsyncImage",
+    "ImageGenerationError",
+    "ImageGenerationTimeout",
+    "encode_data_uri",
+    # Search
+    "Search",
+    "AsyncSearch",
+    "SearchError",
+    "Exa",
+    "AsyncExa",
+    "ExaError",
+    # Audio
+    "Audio",
+    "AsyncAudio",
+    "AudioGenerationError",
+    # Voice + Phone
+    "Voice",
+    "AsyncVoice",
+    "VoiceError",
+    "VoiceCallTimeout",
+    "Phone",
+    "AsyncPhone",
+    "PhoneError",
 ]

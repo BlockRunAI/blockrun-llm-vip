@@ -32,7 +32,7 @@ from blockrun_llm_vip import Anthropic, OpenAI
 # Claude — exactly the official anthropic SDK API
 claude = Anthropic()                      # wallet auto-loaded from ~/.blockrun/.session
 r = claude.messages.create(
-    model="claude-sonnet-4.6",
+    model="claude-opus-4.8",              # current flagship (adaptive thinking)
     max_tokens=2048,
     thinking={"type": "enabled", "budget_tokens": 1024},
     messages=[{"role": "user", "content": "What is 23*47?"}],
@@ -44,13 +44,29 @@ for block in r.content:
 # GPT — exactly the official openai SDK API
 gpt = OpenAI()
 r = gpt.chat.completions.create(
-    model="gpt-4o",
+    model="gpt-4o",                       # served OpenAI-direct (relay-detector-proof)
     messages=[{"role": "user", "content": "hi"}],
 )
 print(r.system_fingerprint, r.model)        # genuine OpenAI direct
 ```
 
 Async: `from blockrun_llm_vip import AsyncAnthropic, AsyncOpenAI`.
+
+### Models
+
+You name the model; the gateway never substitutes it. Pass any current id verbatim:
+
+- **Claude** (native `/v1/messages`): `claude-opus-4.8` · `claude-opus-4.7` ·
+  `claude-opus-4.6` · `claude-opus-4.5` · `claude-sonnet-4.6` · `claude-sonnet-4.5` ·
+  `claude-haiku-4.5`. Opus 4.7/4.8 use adaptive thinking — the standard
+  `thinking={"type": "enabled", "budget_tokens": N}` is honored.
+- **GPT** (`/v1/chat/completions`): `gpt-5.5` · `gpt-5.4` · `gpt-5.4-pro` · `gpt-5.3` ·
+  `gpt-5.2` · `gpt-4.1` · `gpt-4o` · `gpt-4o-mini`, reasoning `o3` / `o4-mini`, and more.
+  GPT‑5.x / o-series are reasoning models — omit `max_tokens` / `temperature` / `top_p`
+  (the gateway normalizes them); `gpt-4o` / `gpt-4o-mini` are served OpenAI-direct.
+
+The full live catalog (66+ models incl. xAI Grok, DeepSeek, Llama, Mistral, Google
+Gemini) is at `https://blockrun.ai/api/v1/models`.
 
 ## Solana — pay in USDC on Solana
 
@@ -73,9 +89,10 @@ video  = Video(chain="solana")
 claude_base = Anthropic()
 ```
 
-Works on all clients (`Anthropic`, `OpenAI`, `Video`, `RealFace`, `VirtualPortrait`
-+ async). Signing needs a Solana RPC for the blockhash — it defaults to BlockRun's
-free proxy and is overridable via `rpc_url=` or the `SOLANA_RPC_URL` env var.
+Works on **every** client (`Anthropic`, `OpenAI`, `Video`, `RealFace`,
+`VirtualPortrait`, `Image`, `Search`, `Exa`, `Audio`, `Voice`, `Phone` + async).
+Signing needs a Solana RPC for the blockhash — it defaults to BlockRun's free proxy
+and is overridable via `rpc_url=` or the `SOLANA_RPC_URL` env var.
 
 ## Video — Seedance, incl. real-person (RealFace)
 
@@ -148,6 +165,80 @@ asset = vp.enroll(name="Mascot", image_url="https://example.com/character.jpg") 
 
 List what a wallet has enrolled: `RealFace().list()` / `VirtualPortrait().list()` (free).
 Async: `AsyncVideo`, `AsyncRealFace`, `AsyncVirtualPortrait`.
+
+## Image — generate & edit
+
+`Image.generate()` / `Image.edit()` return the gateway's verbatim job (`data[].url` is a
+permanent BlockRun-hosted image). They block by default and transparently handle the
+gateway's hybrid flow (fast models return inline; slow ones poll). Pass `wait=False` to
+get the raw job back and `Image().poll(job)` yourself.
+
+```python
+from blockrun_llm_vip import Image
+
+img = Image()
+out = img.generate("a red fox in fresh snow, soft studio light", model="openai/gpt-image-1")
+print(out["data"][0]["url"])
+
+# edit / fuse — pass a base64 data URI (or a list of up to 4); helper encodes bytes:
+from blockrun_llm_vip import encode_data_uri
+edited = img.edit("make it night", image=encode_data_uri(open("fox.png", "rb").read()))
+```
+
+Models: `openai/gpt-image-1` · `gpt-image-2` · `google/nano-banana` · `nano-banana-pro` ·
+`xai/grok-imagine-image` · `zai/cogview-4`. `Image().models()` lists them (free).
+
+## Search — Grok Live Search & Exa
+
+```python
+from blockrun_llm_vip import Search, Exa
+
+# xAI Grok live search over X / web / news — grounded summary + citations
+r = Search().search("latest on x402 micropayments", sources=["x", "news"], max_results=15)
+print(r["summary"], r["citations"])
+
+# Exa neural web search / similar pages / full-text extraction / grounded answer
+exa = Exa()
+hits = exa.search("x402 protocol", num_results=5, category="github")
+text = exa.contents([h["url"] for h in hits["results"]])
+ans  = exa.answer("what is the x402 payment header?")
+```
+
+## Audio — speech, music, sound effects
+
+```python
+from blockrun_llm_vip import Audio
+
+audio = Audio()
+speech = audio.speech("Hello there.", voice="sarah")           # ElevenLabs TTS
+track  = audio.music("dreamy lo-fi beat", instrumental=True)   # MiniMax music (~2 min)
+sfx    = audio.sound_effects("distant thunder over rain")      # ElevenLabs SFX
+print(speech["data"][0]["url"], track["data"][0]["url"])
+
+audio.voices()   # FREE: list TTS voices      audio.models()  # FREE: music models
+```
+
+## Voice & Phone — AI phone calls
+
+Lease a number, then place an AI-driven outbound call. `Voice.call()` blocks until the
+call ends and returns the transcript + recording; `wait=False` + `Voice().poll(call_id)`
+for control.
+
+```python
+from blockrun_llm_vip import Phone, Voice
+
+num = Phone().buy_number(country="US", area_code="415")   # $5, 30-day lease, wallet-bound
+result = Voice().call(
+    to="+14155551234",
+    task="Ask if they're open Sunday, confirm hours, then thank them and end the call.",
+    max_duration=3,
+)
+print(result["ended_by"], result["transcript"], result.get("recording_url"))
+```
+
+`Phone` also does `lookup()` / `lookup_fraud()`, `list_numbers()`, `renew_number()`,
+`release_number()`. Async twins: `AsyncImage`, `AsyncSearch`, `AsyncExa`, `AsyncAudio`,
+`AsyncVoice`, `AsyncPhone` — and `chain="solana"` works on all of them.
 
 ## Wallet
 
