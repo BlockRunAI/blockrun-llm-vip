@@ -20,6 +20,7 @@ native streaming chunks. gpt-4o / gpt-4o-mini are served OpenAI-direct.
 
 from __future__ import annotations
 
+import os
 from typing import Optional
 
 import httpx
@@ -32,6 +33,11 @@ except ImportError as e:  # pragma: no cover
     ) from e
 
 from ._common import resolve_chain
+
+# Default chat HTTP timeout (seconds). Was 120; reasoning models (opus-4.8,
+# deepseek-v4-pro) routinely take 200–300s, so 120 timed out non-streaming
+# calls. Override via the BLOCKRUN_CHAT_TIMEOUT env var. Mirrors blockrun-llm.
+DEFAULT_CHAT_TIMEOUT = float(os.environ.get("BLOCKRUN_CHAT_TIMEOUT", "600"))
 
 
 def _openai_base_url(api_root: str) -> str:
@@ -53,7 +59,7 @@ class OpenAI(openai.OpenAI):
         api_url: Optional[str] = None,
         chain: str = "base",
         rpc_url: Optional[str] = None,
-        timeout: float = 120.0,
+        timeout: float = DEFAULT_CHAT_TIMEOUT,
         **kwargs,
     ):
         ctx = resolve_chain(chain, private_key, api_url, rpc_url=rpc_url)
@@ -78,7 +84,7 @@ class AsyncOpenAI(openai.AsyncOpenAI):
         api_url: Optional[str] = None,
         chain: str = "base",
         rpc_url: Optional[str] = None,
-        timeout: float = 120.0,
+        timeout: float = DEFAULT_CHAT_TIMEOUT,
         **kwargs,
     ):
         ctx = resolve_chain(chain, private_key, api_url, rpc_url=rpc_url)
