@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "blockrun-llm-vip"
-version = "0.4.0"
+version = "0.5.0"
 description = "Drop-in Anthropic & OpenAI Python SDK clients for BlockRun — genuine native passthrough (real signatures, system_fingerprint, native structure) with x402 USDC micropayments on Base or Solana. No model substitution, no response reshaping. Plus AI generation clients: image, search (Grok/Exa), audio (TTS/music), and AI voice calls."
 readme = "README.md"
 requires-python = ">=3.9"

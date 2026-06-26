@@ -76,7 +76,7 @@ from ._audio_client import AsyncAudio, Audio, AudioGenerationError
 from ._voice_client import AsyncVoice, Voice, VoiceCallTimeout, VoiceError
 from ._phone_client import AsyncPhone, Phone, PhoneError
 
-__version__ = "0.4.0"
+__version__ = "0.5.0"
 __all__ = [
     # LLM passthrough
     "Anthropic",
