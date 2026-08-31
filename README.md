@@ -65,7 +65,7 @@ You name the model; the gateway never substitutes it. Pass any current id verbat
   GPT‑5.x / o-series are reasoning models — omit `max_tokens` / `temperature` / `top_p`
   (the gateway normalizes them); `gpt-4o` / `gpt-4o-mini` are served OpenAI-direct.
 
-The full live catalog (<!-- br:models.chatVisible -->71<!-- /br:models.chatVisible --> models incl. xAI Grok, DeepSeek, Llama, Mistral, Google
+The full live catalog (<!-- br:models.chatVisible -->76<!-- /br:models.chatVisible --> models incl. xAI Grok, DeepSeek, Llama, Mistral, Google
 Gemini) is at `https://blockrun.ai/api/v1/models`.
 
 ## Solana — pay in USDC on Solana
