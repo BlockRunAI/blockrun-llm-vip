@@ -78,6 +78,7 @@ from ._phone_client import AsyncPhone, Phone, PhoneError
 
 __version__ = "0.5.0"
 __all__ = [
+    "AccountAPIError",
     # LLM passthrough
     "Anthropic",
     "AsyncAnthropic",
@@ -120,3 +121,5 @@ __all__ = [
     "AsyncPhone",
     "PhoneError",
 ]
+
+from ._api_key import AccountAPIError

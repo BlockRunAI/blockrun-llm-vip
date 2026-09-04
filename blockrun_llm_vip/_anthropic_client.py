@@ -54,19 +54,22 @@ class Anthropic(anthropic.Anthropic):
         self,
         *,
         private_key: Optional[str] = None,
+        api_key: Optional[str] = None,
         api_url: Optional[str] = None,
-        chain: str = "base",
+        chain: Optional[str] = None,
         rpc_url: Optional[str] = None,
         timeout: float = DEFAULT_CHAT_TIMEOUT,
         **kwargs,
     ):
-        ctx = resolve_chain(chain, private_key, api_url, rpc_url=rpc_url)
+        ctx = resolve_chain(chain, private_key, api_url, rpc_url=rpc_url, api_key=api_key)
+        self.auth_mode = ctx.auth_mode
         http_client = httpx.Client(
-            transport=ctx.make_transport(async_=False), timeout=timeout
+            follow_redirects=False,
+            transport=ctx.make_transport(async_=False, native_sdk=True), timeout=timeout
         )
         super().__init__(
             base_url=ctx.api_url,
-            api_key=kwargs.pop("api_key", "blockrun"),
+            api_key="blockrun",
             http_client=http_client,
             **kwargs,
         )
@@ -79,19 +82,22 @@ class AsyncAnthropic(anthropic.AsyncAnthropic):
         self,
         *,
         private_key: Optional[str] = None,
+        api_key: Optional[str] = None,
         api_url: Optional[str] = None,
-        chain: str = "base",
+        chain: Optional[str] = None,
         rpc_url: Optional[str] = None,
         timeout: float = DEFAULT_CHAT_TIMEOUT,
         **kwargs,
     ):
-        ctx = resolve_chain(chain, private_key, api_url, rpc_url=rpc_url)
+        ctx = resolve_chain(chain, private_key, api_url, rpc_url=rpc_url, api_key=api_key)
+        self.auth_mode = ctx.auth_mode
         http_client = httpx.AsyncClient(
-            transport=ctx.make_transport(async_=True), timeout=timeout
+            follow_redirects=False,
+            transport=ctx.make_transport(async_=True, native_sdk=True), timeout=timeout
         )
         super().__init__(
             base_url=ctx.api_url,
-            api_key=kwargs.pop("api_key", "blockrun"),
+            api_key="blockrun",
             http_client=http_client,
             **kwargs,
         )

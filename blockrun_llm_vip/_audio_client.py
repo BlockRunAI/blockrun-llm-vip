@@ -144,14 +144,17 @@ class Audio:
         self,
         *,
         private_key: Optional[str] = None,
+        api_key: Optional[str] = None,
         api_url: Optional[str] = None,
-        chain: str = "base",
+        chain: Optional[str] = None,
         rpc_url: Optional[str] = None,
         request_timeout: float = 240.0,
     ):
-        ctx = resolve_chain(chain, private_key, api_url, rpc_url=rpc_url)
+        ctx = resolve_chain(chain, private_key, api_url, rpc_url=rpc_url, api_key=api_key)
+        self.auth_mode = ctx.auth_mode
         self._api_url = ctx.api_url
         self._client = httpx.Client(
+            follow_redirects=False,
             transport=ctx.make_transport(async_=False),
             timeout=request_timeout,
         )
@@ -254,14 +257,17 @@ class AsyncAudio:
         self,
         *,
         private_key: Optional[str] = None,
+        api_key: Optional[str] = None,
         api_url: Optional[str] = None,
-        chain: str = "base",
+        chain: Optional[str] = None,
         rpc_url: Optional[str] = None,
         request_timeout: float = 240.0,
     ):
-        ctx = resolve_chain(chain, private_key, api_url, rpc_url=rpc_url)
+        ctx = resolve_chain(chain, private_key, api_url, rpc_url=rpc_url, api_key=api_key)
+        self.auth_mode = ctx.auth_mode
         self._api_url = ctx.api_url
         self._client = httpx.AsyncClient(
+            follow_redirects=False,
             transport=ctx.make_transport(async_=True),
             timeout=request_timeout,
         )
