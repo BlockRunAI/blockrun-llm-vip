@@ -1,7 +1,7 @@
 # blockrun-llm-vip
 
 Genuine **native passthrough** for **Anthropic** and **OpenAI** through the BlockRun
-gateway — pay per call in USDC (x402) on **Base or Solana**, with **zero model
+gateway — use an **API key** or pay per call in USDC (x402) on **Solana or Base**, with **zero model
 substitution and zero response reshaping**.
 
 Unlike a normal aggregator, these clients **subclass the official `anthropic` and
@@ -17,6 +17,51 @@ SDK parses the real signals:
   `gpt-4o-mini` are served **OpenAI-direct**.
 
 A Claude / OpenAI relay detector (e.g. cctest.ai) sees a direct upstream call.
+
+## Account API quick start
+
+Register at [user.blockrun.ai](https://user.blockrun.ai), create an
+[API key](https://user.blockrun.ai/dashboard/keys), and add
+[account credit](https://user.blockrun.ai/dashboard/credits).
+
+```bash
+export BLOCKRUN_API_KEY=brk_live_...
+```
+
+```python
+from blockrun_llm_vip import OpenAI, Anthropic, Image
+
+client = OpenAI()  # account mode; no wallet or chain selection needed
+response = client.chat.completions.create(
+    model="openai/gpt-4o-mini",
+    messages=[{"role": "user", "content": "Hello"}],
+)
+print(response.choices[0].message.content)
+# Explicit credentials also work: Anthropic(api_key="brk_live_...")
+# All service clients, including Image/Video/Audio, accept the same api_key.
+```
+
+Sync/async clients use the native OpenAI and Anthropic SDK protocols, including
+Responses and streaming. Media creation and polling authenticate with the same
+account key. The default API root is `https://api.blockrun.ai`; `api_url` or
+`BLOCKRUN_API_BASE_URL` can override it (a trailing `/v1` is normalized).
+Credentials cannot be forwarded to another origin or through redirects. Account
+errors never trigger a wallet payment. Native SDKs retain their error types;
+service HTTP failures raise `AccountAPIError` with `status_code` and `retry_after`.
+Account balances and charges are authoritative in the portal, separate from VIP
+wallet allowlisting. Wallet-owned RealFace/portrait asset lists still require a
+wallet; enrollment and generation support account mode.
+
+Explicit `api_key` and `private_key` together are rejected. An explicit private
+key selects wallet mode even if the API-key environment variable is set. Without
+an API key, explicit/saved chain choices and existing Base-only wallets are
+preserved; otherwise the default is Solana. Use `chain="base"` for an explicit
+Base wallet. The official SDK dependencies stay on their httpx-compatible majors
+(OpenAI <3, Anthropic <1) until a separate httpx2 transport is implemented.
+
+The client supports Responses SSE and video polling; production acceptance of
+these two paths currently depends on deployment of Enterprise PR #10 and its
+video signing-secret configuration.
 
 ## Install
 

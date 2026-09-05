@@ -61,6 +61,8 @@ def _enroll_url(api_url: str) -> str:
 
 
 def _list_url(api_url: str, address: str) -> str:
+    if not address:
+        raise ValueError("Wallet-owned asset listing requires a wallet; account API supports enrollment and generation")
     return f"{api_url}/v1/wallet/{address}/realfaces"
 
 
@@ -85,15 +87,18 @@ class RealFace:
         self,
         *,
         private_key: Optional[str] = None,
+        api_key: Optional[str] = None,
         api_url: Optional[str] = None,
-        chain: str = "base",
+        chain: Optional[str] = None,
         rpc_url: Optional[str] = None,
         request_timeout: float = 60.0,
     ):
-        ctx = resolve_chain(chain, private_key, api_url, rpc_url=rpc_url)
+        ctx = resolve_chain(chain, private_key, api_url, rpc_url=rpc_url, api_key=api_key)
+        self.auth_mode = ctx.auth_mode
         self._api_url = ctx.api_url
         self._address = ctx.address
         self._client = httpx.Client(
+            follow_redirects=False,
             transport=ctx.make_transport(async_=False),
             timeout=request_timeout,
         )
@@ -160,15 +165,18 @@ class AsyncRealFace:
         self,
         *,
         private_key: Optional[str] = None,
+        api_key: Optional[str] = None,
         api_url: Optional[str] = None,
-        chain: str = "base",
+        chain: Optional[str] = None,
         rpc_url: Optional[str] = None,
         request_timeout: float = 60.0,
     ):
-        ctx = resolve_chain(chain, private_key, api_url, rpc_url=rpc_url)
+        ctx = resolve_chain(chain, private_key, api_url, rpc_url=rpc_url, api_key=api_key)
+        self.auth_mode = ctx.auth_mode
         self._api_url = ctx.api_url
         self._address = ctx.address
         self._client = httpx.AsyncClient(
+            follow_redirects=False,
             transport=ctx.make_transport(async_=True),
             timeout=request_timeout,
         )

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
 from typing import Optional, Tuple
 
 import httpx
@@ -48,6 +49,7 @@ class ChainContext:
         account: Optional[Account] = None,
         solana_key: Optional[str] = None,
         rpc_url: Optional[str] = None,
+        api_key: Optional[str] = None,
     ) -> None:
         self.chain = chain
         self.api_url = api_url
@@ -55,8 +57,17 @@ class ChainContext:
         self._account = account
         self._solana_key = solana_key
         self._rpc_url = rpc_url
+        self._api_key = api_key
+        self.auth_mode = "api-key" if api_key else "wallet"
 
-    def make_transport(self, *, async_: bool) -> httpx.BaseTransport:
+    def make_transport(
+        self, *, async_: bool, native_sdk: bool = False
+    ) -> httpx.BaseTransport:
+        if self._api_key:
+            from ._api_key import AccountTransport, AsyncAccountTransport
+
+            cls = AsyncAccountTransport if async_ else AccountTransport
+            return cls(self._api_key, self.api_url, native_sdk=native_sdk)
         if self.chain == "solana":
             from ._solana_transport import (
                 AsyncBlockRunSolanaTransport,
@@ -79,17 +90,48 @@ class ChainContext:
 
 
 def resolve_chain(
-    chain: str = "base",
+    chain: Optional[str] = None,
     private_key: Optional[str] = None,
     api_url: Optional[str] = None,
     *,
     rpc_url: Optional[str] = None,
+    api_key: Optional[str] = None,
 ) -> ChainContext:
     """Resolve wallet + base URL + transport factory for the requested chain.
 
-    ``chain="base"`` (default) pays USDC on Base via EIP-712; ``chain="solana"``
-    pays USDC on Solana via the x402 SVM signer, routed through sol.blockrun.ai.
+    Account keys take precedence over automatic wallet discovery. Existing
+    wallet choices are preserved; otherwise Solana is preferred.
     """
+    from ._api_key import resolve_api_key, account_url
+
+    key = resolve_api_key(api_key, private_key)
+    if key:
+        return ChainContext("account", account_url(api_url), "", api_key=key)
+    if chain is None:
+        # Preserve an explicit EVM key and existing chain/wallet selections.
+        if private_key:
+            chain = (
+                "base"
+                if private_key.startswith("0x") or len(private_key) == 64
+                else "solana"
+            )
+        else:
+            chain = os.getenv("BLOCKRUN_CHAIN")
+            for filename in ("payment-chain", ".chain"):
+                saved = Path.home() / ".blockrun" / filename
+                if not chain and saved.exists():
+                    chain = saved.read_text().strip()
+            if not chain:
+                base = (
+                    os.getenv("BLOCKRUN_WALLET_KEY")
+                    or os.getenv("BASE_CHAIN_WALLET_KEY")
+                    or (Path.home() / ".blockrun" / ".session").exists()
+                )
+                solana = (
+                    os.getenv("SOLANA_WALLET_KEY")
+                    or (Path.home() / ".blockrun" / ".solana-session").exists()
+                )
+                chain = "base" if base and not solana else "solana"
     if chain == "solana":
         from ._solana_wallet import get_solana_public_key, load_solana_wallet
 
@@ -100,7 +142,9 @@ def resolve_chain(
                 "or create ~/.blockrun/.solana-session."
             )
         url = (
-            api_url or os.environ.get("BLOCKRUN_SOLANA_API_URL") or DEFAULT_SOLANA_API_URL
+            api_url
+            or os.environ.get("BLOCKRUN_SOLANA_API_URL")
+            or DEFAULT_SOLANA_API_URL
         ).rstrip("/")
         validate_api_url(url)
         return ChainContext(

@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "blockrun-llm-vip"
 version = "0.5.0"
-description = "Drop-in Anthropic & OpenAI Python SDK clients for BlockRun — genuine native passthrough (real signatures, system_fingerprint, native structure) with x402 USDC micropayments on Base or Solana. No model substitution, no response reshaping. Plus AI generation clients: image, search (Grok/Exa), audio (TTS/music), and AI voice calls."
+description = "Drop-in Anthropic & OpenAI Python SDK clients for BlockRun — genuine native passthrough (real signatures, system_fingerprint, native structure) with API key account billing or x402 USDC micropayments on Solana or Base. No model substitution, no response reshaping. Plus AI generation clients: image, search (Grok/Exa), audio (TTS/music), and AI voice calls."
 readme = "README.md"
 requires-python = ">=3.9"
 license = "MIT"
@@ -17,14 +17,15 @@ dependencies = [
     "python-dotenv>=1.0",
     # The official SDKs — VIP wraps them so genuine native signals (thinking
     # signature, system_fingerprint, native SSE) survive via the SDK's own parsing.
-    "anthropic>=0.40",
-    "openai>=1.40",
+    "anthropic>=0.40,<1",
+    "openai>=1.40,<3",
 ]
 
 [project.optional-dependencies]
 # chain="solana" pays USDC on Solana via the x402 SVM signer (pulls solders +
 # base58 + solana-py). Base-only users don't need this.
-solana = ["x402[svm]>=2.0.0"]
+# Tested signer contract; solana-py 0.40 removes an RPC import used by x402.
+solana = ["x402[svm]==2.21.0", "solana>=0.36,<0.40"]
 
 [project.urls]
 Homepage = "https://blockrun.ai"
